@@ -3,7 +3,7 @@
 > Downloads and unpacks all of your student’s assignments.
 
 ## Support
-✔️ Windows
+✔️ Windows (In Theory)
 
 ✔️ MacOS
 
