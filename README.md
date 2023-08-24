@@ -3,9 +3,9 @@
 > Downloads and unpacks all of your student’s assignments.
 
 ## Support
-✔️ Windows (In Theory)
+✔️ Windows
 
-✔️ MacOS
+✔️ MacOS (In Theory)
 
 ✔️ Linux (In Theory)
 
