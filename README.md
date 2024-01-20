@@ -5,9 +5,9 @@
 ## Support
 ✔️ Windows
 
-✔️ MacOS (In Theory)
+✔️ MacOS
 
-✔️ Linux (In Theory)
+✔️ Linux
 
 ## Direct Run
 - Install [Python](https://www.python.org/)
