@@ -11,7 +11,9 @@
 
 ## Direct Run
 - Install [Python](https://www.python.org/)
-- Run `py` file
+- Open terminal in folder containing the program
+- Run `pip install canvasapi` (Only needs to be run once)
+- Run `python studentAssignmentDownloader.py`
 - Profit
 
 ## Self Compilation
