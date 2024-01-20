@@ -1,6 +1,6 @@
 # studentAssignmentDownloader
 
-> Downloads and unpacks all of your student’s assignments.
+> Downloads, unpacks, and generates rubrics for all of your student’s assignments.
 
 ## Support
 ✔️ Windows
