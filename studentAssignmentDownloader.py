@@ -3,6 +3,8 @@
 # Import the Canvas class
 from canvasapi import Canvas
 
+import ssl
+from sys import platform
 from shutil import copy2
 from zipfile import ZipFile
 from urllib.request import urlopen, urlretrieve
@@ -68,6 +70,13 @@ def generate_rubrics(assignment, names):
     for name in names:
         copy2(assignment, name + "-" + assignment)
     remove(assignment)
+
+if platform.startswith("darwin"):
+    ssl._create_default_https_context = ssl._create_unverified_context
+    try:
+        os.chdir(os.path.sep.join(argv[0].split(os.path.sep)[:-1]))
+    except:
+        pass
 
 # Canvas API URL
 API_URL = "https://sfsu.instructure.com/"
