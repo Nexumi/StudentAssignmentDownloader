@@ -69,6 +69,10 @@ def generate_rubrics(assignment, names):
 
 if platform.startswith("darwin"):
     ssl._create_default_https_context = ssl._create_unverified_context
+    try:
+        os.chdir(os.path.sep.join(argv[0].split(os.path.sep)[:-1]))
+    except:
+        pass
 
 try:
     # Canvas API
