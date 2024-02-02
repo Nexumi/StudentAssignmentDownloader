@@ -4,25 +4,20 @@
 from canvasapi import Canvas
 
 import ssl
-from sys import platform
 from shutil import copy2
 from zipfile import ZipFile
+from sys import argv, platform
 from urllib.request import urlopen, urlretrieve
-from os import listdir, mkdir, chdir, remove, system, name
+from os import listdir, mkdir, chdir, remove, system
 
 def unzipper():
-    zips = listdir()
-    i = 0
-    while i < len(zips):
-        if zips[i][-4:].lower() != ".zip":
-            zips.pop(i)
-        else:
-            i += 1
-    for izip in zips:
-        mkdir(izip[:-4])
-        with ZipFile(izip, 'r') as zipObj:
-          zipObj.extractall(path=izip[:-4])
-        remove(izip)
+    dirs = listdir()
+    for idir in dirs:
+        if idir[-4:].lower() == ".zip":
+            mkdir(idir[:-4])
+            with ZipFile(idir, 'r') as zipObj:
+              zipObj.extractall(path=idir[:-4])
+            remove(idir)
 
 def header(part):
     clear()
@@ -32,7 +27,7 @@ def header(part):
         print("Welcome to Jimmy's Student Rubric Generator!")
 
 def clear():
-    if name == "nt":
+    if platform.startswith("win32"):
         system("cls")
     else:
         system("clear")
@@ -68,70 +63,92 @@ def generate_rubrics(assignment, names):
     chdir(folder)
     urlretrieve("https://web.jpkit.us/grader-rubrics/" + assignment, assignment)
     for name in names:
+        print(name + "-" + assignment)
         copy2(assignment, name + "-" + assignment)
     remove(assignment)
 
 if platform.startswith("darwin"):
     ssl._create_default_https_context = ssl._create_unverified_context
 
-# Canvas API URL
-API_URL = "https://sfsu.instructure.com/"
-
-# Canvas API key
 try:
-    file = open("CanvasToken.cfg", "x")
-    API_KEY = input("Canvas Token not found! Please enter your Canvas Token: ")
-    file.write(API_KEY)
-    file.close()
-except:
-    file = open("CanvasToken.cfg")
-    API_KEY = file.read()
-    file.close()
+    # Canvas API
+    API_URL = "https://sfsu.instructure.com/"
+    COURSE_ID = 31427
+    try:
+        cfg = open("CanvasToken.cfg", "x")
+        print("First time setup!")
+        API_KEY = input("Canvas Token: ")
+        cfg.write(API_KEY + "\n")
+        cfg.write(COURSE_ID)
+        cfg.close()
+    except:
+        cfg = open("CanvasToken.cfg")
+        API_KEY = cfg.read()
+        cfg.close()
 
-# Initialize a new Canvas object
-canvas = Canvas(API_URL, API_KEY)
+    # Initialize a new Canvas object
+    canvas = Canvas(API_URL, API_KEY)
 
-# Get Assignment
-course = canvas.get_course(31427)
-assignments = course.get_assignments()
-assignment = choice(assignments, 1)
-submissions = assignment.get_submissions()
-
-print("Downloading please wait...")
-
-# Generate Folder
-folder = str(assignment)
-folder = folder[:folder.index(" (")]
-try:
-    mkdir(folder)
-except:
-    i = 1
-    while True:
-        try:
-            mkdir(folder + " (" + str(i) + ")")
-            folder += " (" + str(i) + ")"
-            break
-        except:
+    # Get Assignment
+    course = canvas.get_course(COURSE_ID)
+    assignments = list(course.get_assignments())
+    i = 0
+    while i < len(assignments):
+        if assignments[i].submission_types[0] != "online_upload":
+            assignments.pop(i)
+        else:
             i += 1
-chdir(folder)
+    assignment = choice(assignments, 1)
+    submissions = assignment.get_submissions()
 
-# Getting Information
-names = []
-for submission in submissions:
-    if len(submission.attachments):
-        # Download Assignment
-        attachment = submission.attachments[0]
-        urlretrieve(attachment.url, attachment.filename)
+    print()
+    print("Downloading please wait...")
 
-        # Get Student Name
-        student = str(course.get_user(submission.user_id))
-        student = student[:student.index(" (")].replace(" ", "")
-        names.append(student)
-unzipper()
+    # Generate Folder
+    folder = str(assignment)
+    folder = folder[:folder.index(" (")]
+    try:
+        mkdir(folder)
+    except:
+        i = 1
+        while True:
+            try:
+                mkdir(folder + " (" + str(i) + ")")
+                folder += " (" + str(i) + ")"
+                break
+            except:
+                i += 1
+    chdir(folder)
 
-# Get Rubrics (For students that submitted)
-rubric = get_rubrics();
-print("Downloading please wait...")
-generate_rubrics(rubric, names)
+    # Getting Information
+    names = []
+    for submission in submissions:
+        if len(submission.attachments):
+            # Get Student Name
+            student = str(course.get_user(submission.user_id))
+            student = student[:student.index(" (")]
+            print(student)
+            names.append(student.replace(" ", ""))
 
-clear()
+            # Download Assignment
+            attachment = submission.attachments[0]
+            urlretrieve(attachment.url, attachment.filename)
+    unzipper()
+
+    # Get Rubrics (For students that submitted)
+    rubric = get_rubrics();
+    print()
+    print("Downloading please wait...")
+    generate_rubrics(rubric, names)
+
+    clear()
+except Exception as error:
+    # Error Report
+    clear()
+    print("\033[4mAn error occured\033[0m")
+    print()
+    print("ErrorType: " + type(error).__name__)
+    print()
+    print("ErrorMsg:  " + str(error))
+    print()
+    input("Press enter to close...")
