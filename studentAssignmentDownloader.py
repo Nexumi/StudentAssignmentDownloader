@@ -134,7 +134,7 @@ try:
                 continue
 
             print(student)
-            names.append(student.replace(" ", ""))
+            names.append(student.replace(" ", "").replace("-", ""))
 
             # Download Assignment
             attachment = submission.attachments[0]
