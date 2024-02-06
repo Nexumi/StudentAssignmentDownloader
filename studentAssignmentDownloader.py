@@ -32,20 +32,17 @@ def clear():
     else:
         system("clear")
 
-def choice(values, part):
+def choice(values, part, name = lambda n : str(n)):
     x = -1
     while x < 0 or x >= i - 1:
         header(part)
         i = 1
         for value in values:
-            value = str(value)
-            try:
-                print(str(i) + ": " + value[:value.index(" (")])
-            except:
-                print(str(i) + ": " + value)
+            print(str(i) + ": " + name(value))
             i += 1
         try:
-            x = int(input("Number: ")) - 1
+            n = input("Number: ")
+            x = int(n) - 1
         except:
             pass
     return values[x]
@@ -67,8 +64,8 @@ def generate_rubrics(assignment, names):
         copy2(assignment, name + "-" + assignment)
     remove(assignment)
 
+ssl._create_default_https_context = ssl._create_unverified_context
 if platform.startswith("darwin"):
-    ssl._create_default_https_context = ssl._create_unverified_context
     try:
         os.chdir(os.path.sep.join(argv[0].split(os.path.sep)[:-1]))
     except:
@@ -102,7 +99,7 @@ try:
             assignments.pop(i)
         else:
             i += 1
-    assignment = choice(assignments, 1)
+    assignment = choice(assignments, 1, lambda n : n.name)
     submissions = assignment.get_submissions()
 
     print()
@@ -131,6 +128,11 @@ try:
             # Get Student Name
             student = str(course.get_user(submission.user_id))
             student = student[:student.index(" (")]
+
+            # Blacklist Test Student
+            if student == "Test Student":
+                continue
+
             print(student)
             names.append(student.replace(" ", ""))
 
