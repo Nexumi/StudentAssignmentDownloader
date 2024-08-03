@@ -8,7 +8,10 @@ from shutil import copy2
 from zipfile import ZipFile
 from sys import argv, platform
 from urllib.request import urlopen, urlretrieve
-from os import listdir, mkdir, chdir, remove, system
+from os import listdir, mkdir, chdir, remove, system, walk, path
+
+class InvalidConfigException(Exception):
+    pass
 
 def unzipper():
     dirs = listdir()
@@ -48,43 +51,56 @@ def choice(values, part, name = lambda n : str(n)):
     return values[x]
 
 def get_rubrics():
-    data = urlopen("https://web.jpkit.us/grader-rubrics/rubrics.txt")
     rubrics = []
-    for info in data:
-        rubrics.append(info.decode("utf-8").replace("\n", ""))
+    for root, dirs, files in walk(".."):
+        for file in files:
+            if file.startswith("Assignment") and file.endswith("-Rubric.xlsx"):
+                rubrics.append(path.join(root, file)[3:])
     return choice(rubrics, 2)
 
 def generate_rubrics(assignment, names):
-    folder = assignment[:-5] + "s"
+    file = path.split(assignment)[-1][:-5]
+    folder = file + "s"
     mkdir(folder)
     chdir(folder)
-    urlretrieve("https://web.jpkit.us/grader-rubrics/" + assignment, assignment)
     for name in names:
-        print(name + "-" + assignment)
-        copy2(assignment, name + "-" + assignment)
-    remove(assignment)
+        print(name + "-" + file)
+        copy2(path.join("..", "..", "") + assignment, name + "-" + file + ".xlsx")
 
-ssl._create_default_https_context = ssl._create_unverified_context
-if platform.startswith("darwin"):
+try:
+    # SSL Fix
+    ssl._create_default_https_context = ssl._create_unverified_context
+
+    # Path Fix
     try:
-        os.chdir(os.path.sep.join(argv[0].split(os.path.sep)[:-1]))
+        chdir(path.sep.join(argv[0].split(path.sep)[:-1]))
     except:
         pass
 
-try:
+    # Clear default terminal stuff
+    clear()
+
     # Canvas API
-    API_URL = "https://sfsu.instructure.com/"
-    COURSE_ID = 31427
     try:
-        cfg = open("CanvasToken.cfg", "x")
+        cfg = open("Canvas.cfg", "x")
         print("First time setup!")
+        institution = input("Institution: ")
+        API_URL = "https://" + institution + ".instructure.com/"
         API_KEY = input("Canvas Token: ")
+        COURSE_ID = input("Course ID: ")
+        cfg.write(institution + "\n")
         cfg.write(API_KEY + "\n")
+        cfg.write(COURSE_ID + "\n")
         cfg.write(COURSE_ID)
         cfg.close()
     except:
-        cfg = open("CanvasToken.cfg")
-        API_KEY = cfg.read()
+        cfg = open("Canvas.cfg")
+        data = cfg.read().splitlines()
+        if len(data) != 3:
+            raise InvalidConfigException("Invalid config file detected. Please fix or delete the config file and try again.")
+        API_URL = "https://" + data[0] + ".instructure.com/"
+        API_KEY = data[1]
+        COURSE_ID = data[2]
         cfg.close()
 
     # Initialize a new Canvas object
@@ -133,6 +149,7 @@ try:
             if student == "Test Student":
                 continue
 
+            # Record Student Name
             print(student)
             names.append(student.replace(" ", "").replace("-", ""))
 
