@@ -6,6 +6,7 @@ from canvasapi import Canvas
 import ssl
 from shutil import copy2
 from zipfile import ZipFile
+from threading import Thread
 from sys import argv, platform
 from urllib.request import urlopen, urlretrieve
 from os import listdir, mkdir, chdir, remove, system, walk, path
@@ -13,14 +14,13 @@ from os import listdir, mkdir, chdir, remove, system, walk, path
 class InvalidConfigException(Exception):
     pass
 
-def unzipper():
-    dirs = listdir()
-    for idir in dirs:
-        if idir[-4:].lower() == ".zip":
-            mkdir(idir[:-4])
-            with ZipFile(idir, 'r') as zipObj:
-              zipObj.extractall(path=idir[:-4])
-            remove(idir)
+def downloader(url, filename):
+    urlretrieve(url, filename)
+    if filename.endswith(".zip"):
+        mkdir(filename[:-4])
+        with ZipFile(filename, 'r') as zipObj:
+            zipObj.extractall(path=filename[:-4])
+        remove(filename)
 
 def header(part):
     clear()
@@ -143,6 +143,7 @@ try:
 
         # Getting Information
         names = []
+        downloading = []
         for submission in submissions:
             if len(submission.attachments):
                 # Get Student Name
@@ -159,8 +160,10 @@ try:
 
                 # Download Assignment
                 attachment = submission.attachments[0]
-                urlretrieve(attachment.url, attachment.filename)
-        unzipper()
+                downloading.append(Thread(target=downloader, args=(attachment.url, attachment.filename)))
+                downloading[-1].start()
+        for download in downloading:
+            download.join()
 
         # Get Rubrics (For students that submitted)
         rubric = get_rubrics()
