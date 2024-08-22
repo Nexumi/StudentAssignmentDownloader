@@ -7,6 +7,7 @@ import ssl
 from shutil import copy2
 from zipfile import ZipFile
 from threading import Thread
+from json import dumps, loads
 from sys import argv, platform
 from urllib.request import urlopen, urlretrieve
 from os import listdir, mkdir, chdir, remove, system, walk, path
@@ -54,7 +55,7 @@ def choice(values, part, name = lambda n : str(n)):
             pass
     return values[x]
 
-def get_rubrics():
+def get_local_rubrics():
     rubrics = []
     for root, dirs, files in walk(".."):
         for file in files:
@@ -62,7 +63,7 @@ def get_rubrics():
                 rubrics.append(path.join(root, file)[3:])
     return choice(rubrics, 2)
 
-def generate_rubrics(assignment, names):
+def generate_local_rubrics(assignment, names):
     file = path.split(assignment)[-1][:-5]
     folder = file + "s"
     mkdir(folder)
@@ -71,46 +72,52 @@ def generate_rubrics(assignment, names):
         print(name + "-" + file)
         copy2(path.join("..", "..", "") + assignment, name + "-" + file + ".xlsx")
 
-try:
-    # SSL Fix
-    ssl._create_default_https_context = ssl._create_unverified_context
+def get_online_rubrics():
+    data = urlopen(f"{config["RUBRIC_SOURCE"]}rubrics.txt")
+    rubrics = []
+    for info in data:
+        rubrics.append(info.decode("utf-8").replace("\n", ""))
+    return choice(rubrics, 2)
 
-    # Path Fix
-    try:
-        chdir(path.sep.join(argv[0].split(path.sep)[:-1]))
-    except:
-        pass
+def generate_online_rubrics(assignment, names):
+    folder = assignment[:-5] + "s"
+    mkdir(folder)
+    chdir(folder)
+    urlretrieve(config["RUBRIC_SOURCE"] + assignment, assignment)
+    for name in names:
+        print(name + "-" + assignment)
+        copy2(assignment, name + "-" + assignment)
+    remove(assignment)
 
-    # Clear default terminal stuff
-    clear()
+def main():
+    global config
 
     # Canvas API
+    clear()
     try:
-        cfg = open("Canvas.cfg", "x")
-        print("First time setup!")
-        institution = input("Institution: ")
-        API_URL = "https://" + institution + ".instructure.com/"
-        API_KEY = input("Canvas Token: ")
-        COURSE_ID = input("Course ID: ")
-        cfg.write(institution + "\n")
-        cfg.write(API_KEY + "\n")
-        cfg.write(COURSE_ID + "\n")
-        cfg.close()
+        with open("Canvas.cfg", "x") as cfg:
+            print("First time setup!")
+            config = {
+                "API_URL": "https://" + (institution := input("Institution: ")) + ".instructure.com/",
+                "API_KEY": input("Canvas Token: "),
+                "COURSE_ID": input("Course ID: ")
+            }
+            cfg.write(dumps(config))
     except:
-        cfg = open("Canvas.cfg")
-        data = cfg.read().splitlines()
-        if len(data) != 3:
-            raise InvalidConfigException("Invalid config file detected. Please fix or delete the config file and try again.")
-        API_URL = "https://" + data[0] + ".instructure.com/"
-        API_KEY = data[1]
-        COURSE_ID = data[2]
-        cfg.close()
+        with open("Canvas.cfg") as cfg:
+            try:
+                config = loads(cfg.read())
+                if not config.get("API_URL") or not config.get("API_KEY") or not config.get("COURSE_ID"):
+                    raise
+            except:
+                raise InvalidConfigException("Invalid config file detected. Please fix or delete the config file and try again.")
+
 
     # Initialize a new Canvas object
-    canvas = Canvas(API_URL, API_KEY)
+    canvas = Canvas(config["API_URL"], config["API_KEY"])
 
     # Get Assignment
-    course = canvas.get_course(COURSE_ID)
+    course = canvas.get_course(config["COURSE_ID"])
     assignments = list(course.get_assignments())
     i = 0
     while i < len(assignments):
@@ -166,20 +173,38 @@ try:
             download.join()
 
         # Get Rubrics (For students that submitted)
-        rubric = get_rubrics()
+        if config.get("RUBRIC_SOURCE"):
+            rubric = get_online_rubrics()
+        else:
+            rubric = get_local_rubrics()
         if rubric:
             print()
             print("Downloading please wait...")
-            generate_rubrics(rubric, names)
+            if config.get("RUBRIC_SOURCE"):
+                generate_online_rubrics(rubric, names)
+            else:
+                generate_local_rubrics(rubric, names)
+    clear()
 
-    clear()
-except Exception as error:
-    # Error Report
-    clear()
-    print("\033[4mAn error occured\033[0m")
-    print()
-    print("ErrorType: " + type(error).__name__)
-    print()
-    print("ErrorMsg:  " + str(error))
-    print()
-    input("Press enter to close...")
+if __name__ == "__main__":
+    try:
+        # SSL Fix
+        ssl._create_default_https_context = ssl._create_unverified_context
+
+        # Path Fix
+        try:
+            chdir(path.sep.join(argv[0].split(path.sep)[:-1]))
+        except:
+            pass
+
+        main()
+    except Exception as error:
+        # Error Report
+        clear()
+        print("\033[4mAn error occured\033[0m")
+        print()
+        print("ErrorType: " + type(error).__name__)
+        print()
+        print("ErrorMsg:  " + str(error))
+        print()
+        input("Press enter to close...")
