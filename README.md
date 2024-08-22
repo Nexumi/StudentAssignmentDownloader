@@ -1,4 +1,4 @@
-# studentAssignmentDownloader
+# StudentAssignmentDownloader
 
 > Downloads, unpacks, and generates rubrics for all of your student’s assignments.
 
@@ -13,7 +13,7 @@
 - Install [Python](https://www.python.org/)
 - Open terminal in folder containing the program
 - Run `pip install canvasapi` (Only needs to be run once)
-- Run `python studentAssignmentDownloader.py`
+- Run `python StudentAssignmentDownloader.py`
 - Profit
 
 ## Self Compilation
@@ -21,6 +21,6 @@
 - Install [PyInstaller](https://pyinstaller.org/en/stable/)
 - (Optional) Download [UPX](https://upx.github.io/)
 - Run `pip install canvasapi pyinstaller`
-- Run `pyinstaller --onefile generateStudentRubrics.py`
+- Run `pyinstaller --onefile StudentAssignmentDownloader.py`
 - Grab the file from the `dist` folder
 - Discard everything else it creates
