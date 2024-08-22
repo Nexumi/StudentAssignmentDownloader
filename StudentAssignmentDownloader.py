@@ -158,7 +158,7 @@ try:
     unzipper()
 
     # Get Rubrics (For students that submitted)
-    rubric = get_rubrics();
+    rubric = get_rubrics()
     print()
     print("Downloading please wait...")
     generate_rubrics(rubric, names)
