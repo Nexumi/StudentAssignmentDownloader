@@ -89,6 +89,14 @@ def generate_online_rubrics(assignment, names):
         copy2(assignment, name + "-" + assignment)
     remove(assignment)
 
+def urlfix(url):
+    if url:
+        if not url.startswith("https://") and not url.startswith("http://"):
+            url = f"https://{url}"
+        if not url.endswith("/"):
+            url += "/"
+    return url
+
 def main():
     global config
 
@@ -100,7 +108,8 @@ def main():
             config = {
                 "API_URL": "https://" + (institution := input("Institution: ")) + ".instructure.com/",
                 "API_KEY": input("Canvas Token: "),
-                "COURSE_ID": input("Course ID: ")
+                "COURSE_ID": input("Course ID: "),
+                "RUBRIC_SOURCE": urlfix(input("(Optional) Rubric Source: "))
             }
             cfg.write(dumps(config))
     except:
@@ -174,16 +183,17 @@ def main():
 
         # Get Rubrics (For students that submitted)
         if config.get("RUBRIC_SOURCE"):
-            rubric = get_online_rubrics()
+            get_rubrics = get_online_rubrics
+            generate_rubrics = generate_online_rubrics
         else:
-            rubric = get_local_rubrics()
+            get_rubrics = get_local_rubrics
+            generate_rubrics = generate_local_rubrics
+
+        rubric = get_rubrics()
         if rubric:
             print()
             print("Downloading please wait...")
-            if config.get("RUBRIC_SOURCE"):
-                generate_online_rubrics(rubric, names)
-            else:
-                generate_local_rubrics(rubric, names)
+            generate_rubrics(rubric, names)
     clear()
 
 if __name__ == "__main__":
