@@ -91,7 +91,6 @@ try:
         cfg.write(institution + "\n")
         cfg.write(API_KEY + "\n")
         cfg.write(COURSE_ID + "\n")
-        cfg.write(COURSE_ID)
         cfg.close()
     except:
         cfg = open("Canvas.cfg")
