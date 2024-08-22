@@ -45,7 +45,11 @@ def choice(values, part, name = lambda n : str(n)):
             i += 1
         try:
             n = input("Number: ")
+            if n in ["!q", "quit", "cancel", "exit", "done"]:
+                return False
             x = int(n) - 1
+        except KeyboardInterrupt:
+            return False
         except:
             pass
     return values[x]
@@ -115,53 +119,55 @@ try:
         else:
             i += 1
     assignment = choice(assignments, 1, lambda n : n.name)
-    submissions = assignment.get_submissions()
+    if assignment:
+        submissions = assignment.get_submissions()
 
-    print()
-    print("Downloading please wait...")
+        print()
+        print("Downloading please wait...")
 
-    # Generate Folder
-    folder = str(assignment)
-    folder = folder[:folder.index(" (")]
-    try:
-        mkdir(folder)
-    except:
-        i = 1
-        while True:
-            try:
-                mkdir(folder + " (" + str(i) + ")")
-                folder += " (" + str(i) + ")"
-                break
-            except:
-                i += 1
-    chdir(folder)
+        # Generate Folder
+        folder = str(assignment)
+        folder = folder[:folder.index(" (")]
+        try:
+            mkdir(folder)
+        except:
+            i = 1
+            while True:
+                try:
+                    mkdir(folder + " (" + str(i) + ")")
+                    folder += " (" + str(i) + ")"
+                    break
+                except:
+                    i += 1
+        chdir(folder)
 
-    # Getting Information
-    names = []
-    for submission in submissions:
-        if len(submission.attachments):
-            # Get Student Name
-            student = str(course.get_user(submission.user_id))
-            student = student[:student.index(" (")]
+        # Getting Information
+        names = []
+        for submission in submissions:
+            if len(submission.attachments):
+                # Get Student Name
+                student = str(course.get_user(submission.user_id))
+                student = student[:student.index(" (")]
 
-            # Blacklist Test Student
-            if student == "Test Student":
-                continue
+                # Blacklist Test Student
+                if student == "Test Student":
+                    continue
 
-            # Record Student Name
-            print(student)
-            names.append(student.replace(" ", "").replace("-", ""))
+                # Record Student Name
+                print(student)
+                names.append(student.replace(" ", "").replace("-", ""))
 
-            # Download Assignment
-            attachment = submission.attachments[0]
-            urlretrieve(attachment.url, attachment.filename)
-    unzipper()
+                # Download Assignment
+                attachment = submission.attachments[0]
+                urlretrieve(attachment.url, attachment.filename)
+        unzipper()
 
-    # Get Rubrics (For students that submitted)
-    rubric = get_rubrics()
-    print()
-    print("Downloading please wait...")
-    generate_rubrics(rubric, names)
+        # Get Rubrics (For students that submitted)
+        rubric = get_rubrics()
+        if rubric:
+            print()
+            print("Downloading please wait...")
+            generate_rubrics(rubric, names)
 
     clear()
 except Exception as error:
