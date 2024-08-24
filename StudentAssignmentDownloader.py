@@ -73,7 +73,7 @@ def generate_local_rubrics(assignment, names):
         copy2(path.join("..", "..", "") + assignment, name + "-" + file + ".xlsx")
 
 def get_online_rubrics():
-    data = urlopen(f"{config["RUBRIC_SOURCE"]}rubrics.txt")
+    data = urlopen(f"{config['RUBRIC_SOURCE']}rubrics.txt")
     rubrics = []
     for info in data:
         rubrics.append(info.decode("utf-8").replace("\n", ""))
