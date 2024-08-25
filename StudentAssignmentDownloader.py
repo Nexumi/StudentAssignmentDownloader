@@ -64,13 +64,13 @@ def get_local_rubrics():
     return choice(rubrics, 2)
 
 def generate_local_rubrics(assignment, names):
-    file = path.split(assignment)[-1][:-5]
-    folder = file + "s"
+    file = path.split(assignment)[-1]
+    folder = file[:-5] + "s"
     mkdir(folder)
     chdir(folder)
     for name in names:
         print(name + "-" + file)
-        copy2(path.join("..", "..", "") + assignment, name + "-" + file + ".xlsx")
+        copy2(path.join("..", "..", "") + assignment, name + "-" + file)
 
 def get_online_rubrics():
     data = urlopen(f"{config['RUBRIC_SOURCE']}rubrics.txt")
