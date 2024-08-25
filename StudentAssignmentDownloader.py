@@ -76,7 +76,7 @@ def get_online_rubrics():
     data = urlopen(f"{config['RUBRIC_SOURCE']}rubrics.txt")
     rubrics = []
     for info in data:
-        rubrics.append(info.decode("utf-8").replace("\n", ""))
+        rubrics.append(info.decode("utf-8").strip("\n\r"))
     return choice(rubrics, 2)
 
 def generate_online_rubrics(assignment, names):
