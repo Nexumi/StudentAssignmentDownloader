@@ -59,7 +59,7 @@ def get_local_rubrics():
     rubrics = []
     for root, dirs, files in walk(".."):
         for file in files:
-            if file.startswith("Assignment") and file.endswith("-Rubric.xlsx"):
+            if (file.startswith("Assignment-") or file.startswith("Exam-")) and file.endswith("-Rubric.xlsx"):
                 rubrics.append(path.join(root, file)[3:])
     return choice(rubrics, 2)
 
